@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+  </head>
+  <body>
+    <a-scene stats>    
+       <a-assets>
+          <img id="grass" src="images/grass.jpg" crossorigin="anonymous">
+          <img id="grid" src="images/texture1.jpg" crossorigin="anonymous">
+          <video id="city" src="https://cdn.aframe.io/360-video-boilerplate/video/city.mp4" crossorigin="anonymous"></video>
+          <a-asset-item id="crate-obj" src="https://raw.githubusercontent.com/aframevr/assets/master/test-models/models/crate/crate.obj"></a-asset-item>
+          <a-asset-item id="crate-mtl" src="https://raw.githubusercontent.com/aframevr/assets/master/test-models/models/crate/crate.mtl"></a-asset-item>
+          <a-asset-item id="owl" src="models/owl.gltf"></a-asset-item>
+       </a-assets>
+       <a-text value="Вітаємо у VR сцені!" color="black" width="10" position="-0.5 1 -6" font="fonts/GreatVibes-Regular-msdf.json" negate="false"></a-text>
+       <a-text 
+        value="Желудько Яна!" 
+        color="red" 
+        width="10" 
+        position="-0.5 1.5 -6" 
+        font="fonts/Yahei-msdf.json" 
+        negate="false" 
+        animation="property: position; dir: alternate; dur: 2000; easing: easeInOutSine; loop: true; to: 0.5 1.5 -6">
+      </a-text>
+
+       <a-sky color="blue"></a-sky>
+       <a-torus position="-2 1 -5" color="green" radius="1.2" animation="property: components.material.material.color; type: color; from: green; to: red; loop: true; dur: 10000"></a-torus>
+       <a-plane src="#grass" width="7" height="7" rotation="-55 0 0" position="-2 -2 -5"></a-plane>
+       <a-cylinder color="red" height="2" radius="0.05" position="-2 -1 -5"></a-cylinder>
+       <a-cylinder color="blue" height="2" radius="0.05" position="-3 -1 -5"></a-cylinder>
+       <a-torus-knot color="orange" radius="1.2" position="-3 1 -5" animation="property: rotation; to: 0 0 360; loop: true; dur: 10000"></a-torus-knot>
+       <a-plane src="#grid" width="9" height="2" position="3 1 -9"></a-plane>
+       <a-videosphere src="#city"></a-videosphere>
+       <a-obj-model src="#crate-obj" mtl="#crate-mtl" position="2.5 -0.5 -5"></a-obj-model>
+       <a-gltf-model src="#owl" position="2 2 -5" scale="0.2 0.2 0.2"></a-gltf-model>
+       <a-light type="point" intensity="1.5" position="4 0 0"></a-light>
+    <a-scene>
+  </body>
+</html>
