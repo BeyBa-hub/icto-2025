@@ -24,10 +24,9 @@
           <a-asset-item id="owl" src="models/owl.gltf"></a-asset-item>
         </a-assets>
         <!-- Визначення маркера -->
-        <!-- <a-marker preset="hiro"> -->
+        <a-marker preset="hiro">
             <a-entity id="container" rotation="0 0 0" scale="0.2 0.2 0.2" position="0 0 -4">
                 <!-- Тут будуть ваші 3D-елементи -->
-                <a-sphere radius="0.5" color="white" position="0 0.5 0"></a-sphere>
                 <a-torus position="-2 1 -5" color="green" radius="1.2" animation="property: components.material.material.color; type: color; from: green; to: red; loop: true; dur: 10000"></a-torus>
                 <a-plane src="#grass" width="7" height="7" rotation="-55 0 0" position="-2 -2 -5"></a-plane>
                 <a-cylinder color="red" height="2" radius="0.05" position="-2 -1 -5"></a-cylinder>
