@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+      
+      <meta name="viewport" content="width=device-width, initial-scale=1" />
+      <script type="importmap">
+        {
+          "imports": {
+                  "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    		          "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/",
+   		            "mindar":"https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-three.prod.js"
+           }
+        }
+      </script>
+      <style>
+             html, body {
+                  height: 100%;
+                  width: 100%;
+                  margin: 0;
+ 		  overflow: hidden;
+		  position: relative;
+	     }
+      </style>
+      <script type="module" src= "src/main.js"></script>
+</head>
+<boby>
+	
+	<video src="images/owl.mp4" loop playsinline style="visibility: hidden;" id="myVideo"></video>
+</boby>
+</html>
