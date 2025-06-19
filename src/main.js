@@ -32,7 +32,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   // --- Owl model anchor для другого маркера ---
   const modelAnchor = mindarThree.addAnchor(1);
   const loader = new GLTFLoader();
-  loader.load('./models/owl/owl.glb', gltf => {
+  loader.load('./models/owl.glb', gltf => {
     const owl = gltf.scene;
     owl.scale.set(0.2, 0.2, 0.2);
     owl.position.set(0, -0.5, 0);
