@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>MindAR Сонячна система</title>
+  <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
+  <!-- Плагін для MindAR в A-Frame -->
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.2/dist/mindar-image-aframe.prod.js"></script>
+</head>
+<body style="margin: 0; overflow: hidden;">
+
+  <script src="planet.js"></script>
+
+  <a-scene mindar-image="imageTargetSrc: targets.mind; maxTrack: 2"
+           color-space="sRGB"
+           renderer="colorManagement: true; physicallyCorrectLights: true"
+           vr-mode-ui="enabled: false"
+           device-orientation-permission-ui="enabled: false">
+
+    <a-assets>
+      <!-- текстури планет -->
+      <img id="sun" src="sun.jpg">
+      <img id="earth" src="earth.jpg">
+      <img id="mercury" src="mercurymap.jpg">
+      <img id="venus" src="venus.jpg">
+      <img id="mars" src="mars.jpg">
+      <img id="jupiter" src="jupiter.jpg">
+      <img id="saturn" src="saturn.jpg">
+      <img id="uranus" src="uranus.jpg">
+      <img id="neptun" src="neptun.jpg">
+    </a-assets>
+
+    <a-entity mindar-image-target="targetIndex: 0">
+      <a-entity rotation="-90 0 0" scale="0.005 0.005 0.005">
+        <!-- Сонце -->
+        <a-entity geometry="primitive: sphere; radius: 0.2"
+                  material="shader: standard; src: #sun"
+                  planet="dist: 0; mass: 1.989e30; name: Sun">
+        </a-entity>
+        <!-- інші планети -->
+        <a-entity geometry="primitive: sphere; radius: 0.03"
+                  material="src: #mercury"
+                  planet="dist: 57.91e9; mass: 3.3011e23; T: 87.9691; name: Mercury">
+        </a-entity>
+        <a-entity geometry="primitive: sphere; radius: 0.06"
+                  material="src: #venus"
+                  planet="dist: 108.2e9; mass: 4.876e24; T: 224.7; name: Venus">
+        </a-entity>
+        <a-entity geometry="primitive: sphere; radius: 0.06"
+                  material="src: #earth"
+                  planet="dist: 149.6e9; mass: 6e24; T: 365; name: Earth">
+        </a-entity>
+        <a-entity geometry="primitive: sphere; radius: 0.04"
+                  material="src: #mars"
+                  planet="dist: 227.9e9; mass: 6.4171e23; T: 687; name: Mars">
+        </a-entity>
+        <a-entity geometry="primitive: sphere; radius: 0.12"
+                  material="src: #jupiter"
+                  planet="dist: 778.5e9; mass: 1.8986e27; T: 4331; name: Jupiter">
+        </a-entity>
+        <a-entity geometry="primitive: sphere; radius: 0.10"
+                  material="src: #saturn"
+                  planet="dist: 1.434e12; mass: 5.683e26; T: 10747; name: Saturn">
+        </a-entity>
+        <a-entity geometry="primitive: sphere; radius: 0.09"
+                  material="src: #uranus"
+                  planet="dist: 2.871e12; mass: 8.681e25; T: 30589; name: Uranus">
+        </a-entity>
+        <a-entity geometry="primitive: sphere; radius: 0.08"
+                  material="src: #neptun"
+                  planet="dist: 4.495e12; mass: 1.024e26; T: 59800; name: Neptune">
+        </a-entity>
+
+        <!-- Симуляція руху -->
+        <a-entity main></a-entity>
+      </a-entity>
+    </a-entity>
+
+    <!-- камера -->
+    <a-camera position="0 0 0"></a-camera>
+  </a-scene>
+
+</body>
+</html>
