@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Сонячна система - Тиждень 5</title>
+  <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
+</head>
+<body>
+
+  <script src="planet.js"></script>
+
+  <a-scene>
+      <a-assets>
+        <img id="space" src="space.jpg" crossorigin="anonymous">
+        <img id="sun" src="sun.jpg" crossorigin="anonymous">
+        <img id="earth" src="earth.jpg" crossorigin="anonymous">
+        <img id="jupiter" src="jupiter.jpg" crossorigin="anonymous">
+        <img id="neptun" src="neptun.jpg" crossorigin="anonymous">
+        <img id="venus" src="venus.jpg" crossorigin="anonymous">
+        <img id="uranus" src="uranus.jpg" crossorigin="anonymous">
+        <img id="saturn" src="saturn.jpg" crossorigin="anonymous">
+        <img id="mercury" src="mercurymap.jpg" crossorigin="anonymous">
+        <img id="mars" src="mars.jpg" crossorigin="anonymous">
+      </a-assets>
+      <a-sky src="#space"  radius="100"></a-sky>
+      <a-camera position="0 0 600"
+                cursor-visible="true"
+                cursor-scale="2"
+                cursor-color="#0095DD"
+                cursor-opacity="0.5"></a-camera>
+
+      <a-entity geometry="primitive: sphere; radius: 20.510"
+                material="shader: standard; src: #sun"
+                planet="dist: 0; mass: 1.989e30; name: Sun">
+      </a-entity>
+
+      <a-entity geometry="primitive: sphere; radius: 2.4397"
+                material="src: #mercury"
+                planet="dist: 57.91e9; mass: 3.3011e23; T: 87.9691; name: Mercury">
+      </a-entity>
+
+      <a-entity geometry="primitive: sphere; radius: 6.0518"
+                material="src: #venus"
+                planet="dist: 108.2e9; mass: 4.876e24; T: 224.7; name: Venus">
+      </a-entity>
+
+      <a-entity geometry="primitive: sphere; radius: 6.371"
+                material="src: #earth"
+                planet="dist: 149.6e9; mass: 6e24; T: 365; name: Earth">
+      </a-entity>
+
+      <a-entity geometry="primitive: sphere; radius: 3.3895"
+                material="src: #mars"
+                planet="dist: 227.939366e9; mass: 6.4171e23; T: 686.980; name: Mars">
+      </a-entity>
+
+      <a-entity geometry="primitive: sphere; radius: 71.492" 
+          material="src: #jupiter" 
+                planet="dist: 778.5e9; mass: 1.8986e27; T: 11.862; name: Jupiter">
+      </a-entity>
+
+      <a-entity geometry="primitive: sphere; radius: 58.232" 
+                material="src: #saturn" 
+                planet="dist: 1.434e12; mass: 5.683e26; T: 10747; name: Saturn">
+      </a-entity>
+
+      <a-entity geometry="primitive: sphere; radius: 25.362" 
+                material="src: #uranus" 
+                planet="dist: 2.871e12; mass: 8.681e25; T: 30589; name: Uranus">
+      </a-entity>
+
+      <a-entity geometry="primitive: sphere; radius: 24.622" 
+                material="src: #neptun" 
+                planet="dist: 4.495e12; mass: 1.024e26; T: 59800; name: Neptune">
+      </a-entity>
+      <a-entity main></a-entity>
+  </a-scene>
+
+</body>
+</html>
