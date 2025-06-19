@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Тиждень 6</title>
+    <script src="https://aframe.io/releases/1.7.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+  </head>
+
+  <body>
+    <script>
+      const markerVisible = { A: false, B: false, C: false, D: false };
+      const coord = { A: new THREE.Vector3(), B: new THREE.Vector3(), C: new THREE.Vector3(), D: new THREE.Vector3() };
+
+      AFRAME.registerComponent('registerevents', {
+        init: function () {
+          const marker = this.el;
+          marker.addEventListener('markerFound', () => {
+            markerVisible[marker.id] = true;
+            console.log(marker.id, "знайдено");
+          });
+          marker.addEventListener('markerLost', () => {
+            markerVisible[marker.id] = false;
+            console.log(marker.id, "втрачено");
+          });
+        }
+      });
+
+      AFRAME.registerComponent('run', {
+        tick: function () {
+          const A = document.getElementById("A")?.object3D;
+          const B = document.getElementById("B")?.object3D;
+          const C = document.getElementById("C")?.object3D;
+          const D = document.getElementById("D")?.object3D;
+
+          if (!A || !B || !C || !D) return;
+
+          A.getWorldPosition(coord["A"]);
+          B.getWorldPosition(coord["B"]);
+          C.getWorldPosition(coord["C"]);
+          D.getWorldPosition(coord["D"]);
+
+          if (markerVisible.A && markerVisible.B && markerVisible.C && markerVisible.D) {
+            const lenAB = coord.A.distanceTo(coord.B);
+            const lenBC = coord.B.distanceTo(coord.C);
+            const lenCD = coord.C.distanceTo(coord.D);
+            const lenDA = coord.D.distanceTo(coord.A);
+            const P = lenAB + lenBC + lenCD + lenDA;
+
+            const lenAC = coord.A.distanceTo(coord.C);
+            const lenBD = coord.B.distanceTo(coord.D);
+
+            const pp_ABC = (lenAB + lenBC + lenAC) / 2;
+            const pp_BCD = (lenBC + lenCD + lenBD) / 2;
+            const pp_CDA = (lenCD + lenDA + lenAC) / 2;
+            const pp_ABD = (lenAB + lenBD + lenDA) / 2;
+
+            const S_ABC = Math.sqrt(pp_ABC * (pp_ABC - lenAB) * (pp_ABC - lenBC) * (pp_ABC - lenAC));
+            const S_BCD = Math.sqrt(pp_BCD * (pp_BCD - lenBC) * (pp_BCD - lenCD) * (pp_BCD - lenBD));
+            const S_CDA = Math.sqrt(pp_CDA * (pp_CDA - lenCD) * (pp_CDA - lenDA) * (pp_CDA - lenAC));
+            const S_ABD = Math.sqrt(pp_ABD * (pp_ABD - lenAB) * (pp_ABD - lenBD) * (pp_ABD - lenDA));
+
+            const PS = document.getElementById("PS");
+            PS.setAttribute("value",
+              "P(ABCD) = " + P.toFixed(3) + "\n" +
+              "S(ABC) = " + S_ABC.toFixed(3) + " | S(BCD) = " + S_BCD.toFixed(3) + "\n" +
+              "S(CDA) = " + S_CDA.toFixed(3) + " | S(ABD) = " + S_ABD.toFixed(3)
+            );
+          }
+        }
+      });
+    </script>
+
+    <a-scene embedded arjs="trackingMethod: best; sourceType: webcam;">
+      <!-- Маркер A -->
+      <a-marker id="A" registerevents type="pattern" url="images/A.patt">
+        <a-sphere color="red" radius="0.1"></a-sphere>
+        <a-text id="PS" value="" color="yellow" position="0 0.3 0" rotation="-90 0 0"></a-text>
+      </a-marker>
+
+      <!-- Маркер B -->
+      <a-marker id="B" registerevents type="pattern" url="images/B.patt">
+        <a-sphere color="green" radius="0.1"></a-sphere>
+      </a-marker>
+
+      <!-- Маркер C -->
+      <a-marker id="C" registerevents type="pattern" url="images/C.patt">
+        <a-sphere color="blue" radius="0.1"></a-sphere>
+      </a-marker>
+
+      <!-- Маркер D -->
+      <a-marker id="D" registerevents type="pattern" url="images/D.patt">
+        <a-sphere color="orange" radius="0.1"></a-sphere>
+      </a-marker>
+
+      <a-entity camera></a-entity>
+      <a-entity run></a-entity>
+    </a-scene>
+  </body>
+</html>
