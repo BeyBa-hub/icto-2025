@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>AR Маска Котика</title>
+    
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-face-aframe.prod.js"></script>
+    
+    <script src="src/main2.js" defer></script>
+
+    <style>
+        body { margin: 0; }
+        .a-scene { height: 100vh; width: 100vw; }
+    </style>
+</head>
+<body>
+    <a-scene mindar-face vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
+        <a-camera active="false" position="0 0 0"></a-camera>
+        
+        <!-- 
+            Один якір на переніссі (між очима).
+            Це ідеальна центральна точка для маски, яка покриває все обличчя.
+            anchorIndex: 168
+        -->
+        <a-entity mindar-face-target="anchorIndex: 168">
+            <!-- Сюди ми динамічно додамо маску котика за допомогою JS -->
+        </a-entity>
+    </a-scene>
+</body>
+</html>
