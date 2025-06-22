@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AR Дракон та Лицар (Ввід координат)</title>
+    <!-- Підключаємо A-Frame -->
+    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
+    <!-- Підключаємо AR.js - важливо використовувати версію з компонентами для геолокації -->
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
+
+    <style>
+        body { margin: 0; overflow: hidden; }
+        
+        /* Стилі для форми вводу координат */
+        #coords-form-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            color: white;
+            z-index: 2000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: sans-serif;
+            text-align: center;
+        }
+
+        #coords-form {
+            background: #222;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        #coords-form h2 {
+            margin-top: 0;
+        }
+
+        #coords-form input {
+            display: block;
+            width: 250px;
+            padding: 10px;
+            margin: 10px auto;
+            border-radius: 5px;
+            border: 1px solid #555;
+            background: #333;
+            color: white;
+            font-size: 16px;
+        }
+
+        #coords-form button {
+            padding: 12px 25px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        #coords-form button:hover {
+            background-color: #45a049;
+        }
+
+        /* Стилі для повідомлення користувачу */
+        #ar-info {
+            position: fixed;
+            bottom: 10px; /* Змінено на bottom для кращої видимості */
+            left: 10px;
+            right: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            font-family: sans-serif;
+            font-size: 14px;
+            z-index: 1000;
+            display: none; /* Спочатку приховано */
+        }
+    </style>
+</head>
+<body>
+    <!-- Форма для вводу GPS координат -->
+    <div id="coords-form-container">
+        <div id="coords-form">
+            <h2>Введіть центральні GPS-координати</h2>
+            <label for="lat-input">Широта (Latitude):</label>
+            <input type="number" id="lat-input" step="any" placeholder="наприклад, 47.9013933" value="47.9013933">
+            
+            <label for="lon-input">Довгота (Longitude):</label>
+            <input type="number" id="lon-input" step="any" placeholder="наприклад, 33.4125587" value="33.4125587">
+            
+            <button id="submit-coords">Розпочати AR</button>
+        </div>
+    </div>
+
+    <!-- Повідомлення для користувача -->
+    <div id="ar-info">
+        Будь ласка, дозвольте доступ до камери та геолокації.<br>
+        Поверніть камеру ліворуч та праворуч, щоб побачити 3D-моделі.
+    </div>
+
+    <!-- Головна AR-сцена (спочатку прихована) -->
+    <a-scene
+        vr-mode-ui="enabled: false"
+        arjs="sourceType: webcam; detectionMode: mono; debugUIEnabled: false;"
+        loading-screen="enabled: false;"
+        gesture-detector
+        renderer="logarithmicDepthBuffer: true;"
+        style="display: none;"
+    >
+        <!-- Менеджер ресурсів: тут ми визначаємо наші 3D-моделі за ідентифікаторами -->
+        <a-assets>
+            <a-asset-item id="dragon-model" src="models/icy_dragon.glb"></a-asset-item>
+            <a-asset-item id="knight-model" src="models/knight.glb"></a-asset-item>
+        </a-assets>
+
+        <!-- Камера, яка використовує GPS для визначення позиції -->
+        <a-camera
+            rotation-reader
+            look-controls
+        ></a-camera>
+
+        <!--
+            Елемент-контейнер, який буде прив'язаний до GPS-координат, введених користувачем.
+            Ми встановлюємо координати динамічно за допомогою JavaScript.
+            Надаємо йому ID для легкого доступу.
+        -->
+        <a-entity id="ar-anchor" scale="1 1 1">
+            <!-- Модель Дракона (ліворуч від центральної GPS-точки) -->
+            <a-entity
+                gltf-model="#dragon-model"
+                position="-30 -4 0"
+                rotation="0 120 0"
+                scale="0.1 0.1 0.1"
+                animation-mixer="clip: Take 001; loop: repeat; timeScale: 1.5"
+            ></a-entity>
+
+            <!-- Модель Лицаря (праворуч від центральної GPS-точки) -->
+            <a-entity
+                gltf-model="#knight-model"
+                position="4 0 0"
+                rotation="0 -80 0"
+                scale="0.8 0.8 0.8"
+            ></a-entity>
+
+            <!-- Додаткове освітлення для кращого вигляду моделей -->
+            <a-entity light="type: ambient; color: #CCC; intensity: 1.0"></a-entity>
+            <a-entity light="type: directional; color: #FFF; intensity: 1.2" position="-10 10 -5"></a-entity>
+            <a-entity light="type: directional; color: #DDF; intensity: 0.7" position="10 8 5"></a-entity>
+        </a-entity>
+    </a-scene>
+
+    <!-- Скрипт для керування логікою -->
+    <script>
+        window.addEventListener('load', () => {
+            const scene = document.querySelector('a-scene');
+            const arAnchor = document.getElementById('ar-anchor');
+            const formContainer = document.getElementById('coords-form-container');
+            const submitButton = document.getElementById('submit-coords');
+            const latInput = document.getElementById('lat-input');
+            const lonInput = document.getElementById('lon-input');
+            const arInfo = document.getElementById('ar-info');
+
+            // Обробник натискання кнопки
+            submitButton.addEventListener('click', () => {
+                const latitude = latInput.value;
+                const longitude = lonInput.value;
+
+                // Перевірка, чи введено значення
+                if (!latitude || !longitude) {
+                    alert('Будь ласка, введіть обидві координати.');
+                    return;
+                }
+
+                // Встановлюємо атрибут gps-new-entity-place з введеними координатами
+                arAnchor.setAttribute('gps-new-entity-place', {
+                    latitude: latitude,
+                    longitude: longitude
+                });
+
+                // Ховаємо форму та показуємо AR-сцену та інфо-повідомлення
+                formContainer.style.display = 'none';
+                scene.style.display = 'block';
+                arInfo.style.display = 'block';
+            });
+
+            // Приховуємо інфо-повідомлення, коли GPS успішно ініціалізовано
+            scene.addEventListener('arjs-original-gps-init', function () {
+                // Можна прибрати через 5 секунд для кращого досвіду
+                setTimeout(() => {
+                    arInfo.style.display = 'none';
+                }, 5000);
+            });
+        });
+    </script>
+</body>
+</html>
