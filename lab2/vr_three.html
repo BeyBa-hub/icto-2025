@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>VR Scene - Saturn (Three.js)</title>
+    <style>
+        body { margin: 0; }
+        canvas { display: block; }
+    </style>
+</head>
+<body>
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.158.0/build/three.module.js"
+            }
+        }
+    </script>
+    <script type="module">
+        import * as THREE from 'three';
+
+        // 1. Ініціалізація сцени, камери та рендерера
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        scene.background = new THREE.Color(0x101010);
+        camera.position.set(0, 1.5, 4);
+
+        // 1. Направлене світло, що імітує сонце
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 3.0); // Інтенсивність значно вища
+        directionalLight.position.set(5, 3, 5); // Позиція важлива для напрямку променів
+        scene.add(directionalLight);
+
+        // 2. Напівсферичне світло для м'яких тіней та підсвічування темної сторони
+        const hemisphereLight = new THREE.HemisphereLight(
+            0xffffff, // Колір неба (світлий, підсвічує верх)
+            0x444444, // Колір "землі" (темний, підсвічує низ)
+            1.5       // Загальна інтенсивність
+        );
+        scene.add(hemisphereLight);
+
+        // 3. Створення Сатурна та кілець
+        const textureLoader = new THREE.TextureLoader();
+        const saturnTexture = textureLoader.load("assets/saturn.jpg");
+        const ringsTexture = textureLoader.load('assets/saturn_rings.png');
+
+        // Сатурн
+        const saturnGeometry = new THREE.SphereGeometry(0.6, 64, 52); // Радіус 60,000 км -> 0.6
+        const saturnMaterial = new THREE.MeshStandardMaterial({ map: saturnTexture });
+        const saturnMesh = new THREE.Mesh(saturnGeometry, saturnMaterial);
+
+        // Кільця
+        const ringsGeometry = new THREE.RingGeometry(0.745, 1.37, 64); // 74,500 км до 137,000 км
+        const ringsMaterial = new THREE.MeshBasicMaterial({
+            map: ringsTexture,
+            side: THREE.DoubleSide,
+            transparent: true
+        });
+        const ringsMesh = new THREE.Mesh(ringsGeometry, ringsMaterial);
+        ringsMesh.rotation.x = -Math.PI / 2; // Повертаємо кільця в горизонтальну площину
+
+        // 4. Групування для спільного нахилу
+        const saturnSystem = new THREE.Group();
+        saturnSystem.add(saturnMesh);
+        saturnSystem.add(ringsMesh);
+
+        // Нахил осі на 27 градусів
+        const tiltInRadians = 27 * (Math.PI / 180);
+        saturnSystem.rotation.z = -tiltInRadians;
+
+        saturnSystem.position.set(0, 1, -2);
+        scene.add(saturnSystem);
+
+        // 5. Анімація
+        function animate() {
+            requestAnimationFrame(animate);
+
+            // Обертання Сатурна навколо своєї осі Y
+            saturnMesh.rotation.y += 0.001;
+            
+            renderer.render(scene, camera);
+        }
+
+        animate();
+
+        // Адаптація до розміру вікна
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+    </script>
+</body>
+</html>

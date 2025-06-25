@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8" />
+  <title>AR Сатурн з Three.js + MindAR</title>
+  <style>
+    body { margin: 0; overflow: hidden; }
+    #ar-container {
+      position: relative;
+      width: 100%;
+      height: 100vh;
+    }
+    #ar-container video,
+    #ar-container canvas {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+    }
+    #ar-container video { z-index: 1; }
+    #ar-container canvas { z-index: 2; }
+  </style>
+
+  <!-- 1) Three.js r150 (рекомендовано для MindAR v1.1.x) -->
+  <script src="https://unpkg.com/three@0.150.0/build/three.min.js"></script>
+  <!-- 2) MindAR (image tracking) v1.1.5 -->
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.1.5/dist/mindar-image-three.prod.js"></script>
+</head>
+<body>
+  <div id="ar-container"></div>
+
+  <script>
+  window.addEventListener('DOMContentLoaded', async () => {
+    // Ініціалізуємо MindAR:
+    const mindarThree = new window.MINDAR.IMAGE.MindARThree({
+      container: document.querySelector('#ar-container'),
+      imageTargetSrc: './assets/marker.mind'
+    });
+
+    const { renderer, scene, camera } = mindarThree;
+
+    // Примусово встановимо розмір canvas під вікно:
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.querySelector('#ar-container').appendChild(renderer.domElement);
+
+    // Освітлення:
+    scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
+    dirLight.position.set(0, 1, 1);
+    scene.add(dirLight);
+    const sunLight = new THREE.PointLight(0xffffff, 1.2);
+    sunLight.position.set(500000/1000, 0, 0);
+    scene.add(sunLight);
+
+    // Завантажуємо текстури:
+    const loader = new THREE.TextureLoader();
+    const satTex  = await loader.loadAsync('./assets/saturn.jpg');
+    const ringTex = await loader.loadAsync('./assets/saturn_rings.png');
+
+    // Група Сатурна з нахилом осі 27° та масштабом під маркер:
+    const saturnGroup = new THREE.Group();
+    saturnGroup.rotation.z = THREE.MathUtils.degToRad(27);
+    saturnGroup.scale.set(0.1, 0.1, 0.1);
+
+    // Сфера (Сатурн):
+    const R = 60000 / 1000; // 60
+    const sphG = new THREE.SphereGeometry(R, 64, 32);
+    const sphM = new THREE.MeshStandardMaterial({ map: satTex });
+    const satMesh = new THREE.Mesh(sphG, sphM);
+    saturnGroup.add(satMesh);
+
+    // Кільця D–A:
+    const Rin  = 74500  / 1000; // 74.5
+    const Rout = 137000 / 1000; // 137
+    const ringG = new THREE.RingGeometry(Rin, Rout, 128, 16);
+    ringG.rotateX(-Math.PI/2);
+    const ringM = new THREE.MeshStandardMaterial({
+      map: ringTex,
+      side: THREE.DoubleSide,
+      transparent: true
+    });
+    const ringMesh = new THREE.Mesh(ringG, ringM);
+    saturnGroup.add(ringMesh);
+
+    // Привʼязуємо групу до AR-якоря:
+    const anchor = mindarThree.addAnchor(0);
+    anchor.group.add(saturnGroup);
+
+    // Анімація обертання:
+    const clock = new THREE.Clock();
+    const animate = () => {
+      const d = clock.getDelta();
+      satMesh.rotation.y  += d * 0.1;
+      ringMesh.rotation.y += d * 0.1;
+      renderer.render(scene, camera);
+    };
+
+    // Запускаємо AR:
+    await mindarThree.start();
+    renderer.setAnimationLoop(animate);
+  });
+  </script>
+</body>
+</html>
