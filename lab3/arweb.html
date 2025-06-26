@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Сатурн у WebXR</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+        
+        #loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 18px;
+            z-index: 1000;
+        }
+        
+        #info {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            color: white;
+            font-size: 14px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 5px;
+            z-index: 1001;
+            max-width: 300px;
+        }
+        
+        #controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 1001;
+        }
+        
+        .control-btn {
+            padding: 10px 15px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background 0.3s;
+        }
+        
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        #error {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #ff6b6b;
+            font-size: 16px;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            z-index: 1002;
+            display: none;
+        }
+
+        #ar-status {
+            position: fixed;
+            top: 60px;
+            left: 10px;
+            color: #4CAF50;
+            font-size: 12px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 5px 10px;
+            border-radius: 3px;
+            z-index: 1001;
+            display: none;
+        }
+
+        /* Стилі для AR кнопки */
+        #ARButton {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 15px 25px;
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+            transition: all 0.3s;
+            z-index: 1002;
+        }
+
+        #ARButton:hover {
+            background: linear-gradient(45deg, #45a049, #4CAF50);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+            transform: translateX(-50%) translateY(-2px);
+        }
+
+        #ARButton:disabled {
+            background: #666;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="loading">Завантаження моделі Сатурна...</div>
+    <div id="error">
+        <h3>Помилка WebXR</h3>
+        <p id="error-message">Не вдалося ініціалізувати WebXR</p>
+    </div>
+    
+    <div id="ar-status">AR режим активний</div>
+    
+    <div id="info">
+        <h3>Модель Сатурна в WebXR</h3>
+        <p>• Радіус Сатурна: 60,000 км</p>
+        <p>• Кільця: 74,500 - 137,000 км</p>
+        <p>• Нахил осі: 27°</p>
+        <p id="ar-support-info">Перевірка AR підтримки...</p>
+    </div>
+    
+    <div id="controls">
+        <button class="control-btn" onclick="toggleRotation()">Обертання</button>
+        <button class="control-btn" onclick="toggleRings()">Кільця</button>
+        <button class="control-btn" onclick="adjustScale()">Масштаб</button>
+    </div>
+
+    <script type="module">
+        import * as THREE from 'https://unpkg.com/three@0.158.0/build/three.module.js';
+        import { ARButton } from 'https://unpkg.com/three@0.158.0/examples/jsm/webxr/ARButton.js';
+
+        let scene, camera, renderer, saturn, rings, light;
+        let saturnGroup, isRotating = true, ringsVisible = true;
+        let currentScale = 0.1; // Зменшений початковий масштаб для AR
+        const scales = [0.05, 0.1, 0.2, 0.5];
+        let scaleIndex = 1;
+        let arSupported = false;
+
+        // Масштабні коефіцієнти для AR
+        const SATURN_RADIUS = 1.5; // Зменшений для AR
+        const RING_D_INNER = 2; 
+        const RING_A_OUTER = 4; 
+        const SUN_DISTANCE = 50; 
+
+        async function init() {
+            // Створення сцени
+            scene = new THREE.Scene();
+            
+            // Налаштування камери
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.01, 1000);
+            camera.position.set(0, 2, 5);
+
+            // Створення рендерера
+            renderer = new THREE.WebGLRenderer({ 
+                antialias: true, 
+                alpha: true 
+            });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            renderer.xr.enabled = true;
+            document.body.appendChild(renderer.domElement);
+
+            // Перевірка підтримки WebXR
+            await checkARSupport();
+
+            // Створення групи для Сатурна
+            saturnGroup = new THREE.Group();
+            scene.add(saturnGroup);
+
+            // Створення 3D моделі без текстур (для надійності)
+            createSaturnWithoutTextures();
+            createRingsWithoutTextures();
+            createLighting();
+            
+            // Налаштування WebXR після створення моделі
+            setupWebXR();
+            
+            animate();
+            
+            // Приховати індикатор завантаження
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        async function checkARSupport() {
+            const arSupportInfo = document.getElementById('ar-support-info');
+            
+            if (!navigator.xr) {
+                arSupportInfo.textContent = '❌ WebXR не підтримується';
+                arSupportInfo.style.color = '#ff6b6b';
+                return;
+            }
+
+            try {
+                arSupported = await navigator.xr.isSessionSupported('immersive-ar');
+                if (arSupported) {
+                    arSupportInfo.textContent = '✅ AR підтримується';
+                    arSupportInfo.style.color = '#4CAF50';
+                } else {
+                    arSupportInfo.textContent = '⚠️ AR не підтримується пристроєм';
+                    arSupportInfo.style.color = '#ff9800';
+                }
+            } catch (error) {
+                console.error('Помилка перевірки AR:', error);
+                arSupportInfo.textContent = '❌ Помилка перевірки AR';
+                arSupportInfo.style.color = '#ff6b6b';
+            }
+        }
+
+        function createSaturnWithoutTextures() {
+            const geometry = new THREE.SphereGeometry(SATURN_RADIUS, 32, 16);
+            
+            // Створюємо матеріал з градієнтом для імітації Сатурна
+            const material = new THREE.MeshPhongMaterial({ 
+                color: 0xfad5a5,
+                shininess: 30,
+                transparent: true,
+                opacity: 0.9
+            });
+            
+            saturn = new THREE.Mesh(geometry, material);
+            saturn.castShadow = true;
+            saturn.receiveShadow = true;
+            
+            saturnGroup.add(saturn);
+            console.log('Сатурн створено без текстур');
+        }
+
+        function createRingsWithoutTextures() {
+            // Створення кілець з простим матеріалом
+            const ringGeometry = new THREE.RingGeometry(RING_D_INNER, RING_A_OUTER, 32, 4);
+            
+            const ringMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0xcccccc,
+                transparent: true,
+                opacity: 0.7,
+                side: THREE.DoubleSide
+            });
+            
+            rings = new THREE.Mesh(ringGeometry, ringMaterial);
+            rings.rotation.x = Math.PI / 2;
+            rings.receiveShadow = true;
+            
+            saturnGroup.add(rings);
+            console.log('Кільця створено без текстур');
+        }
+
+        function createLighting() {
+            // Основне джерело світла
+            light = new THREE.DirectionalLight(0xffffff, 1);
+            light.position.set(SUN_DISTANCE, SUN_DISTANCE, SUN_DISTANCE);
+            light.castShadow = true;
+            light.shadow.mapSize.width = 1024;
+            light.shadow.mapSize.height = 1024;
+            scene.add(light);
+            
+            // Ambient light
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.4);
+            scene.add(ambientLight);
+        }
+
+        function setupWebXR() {
+            // Створення власної AR кнопки з кращим контролем
+            const arButton = document.createElement('button');
+            arButton.id = 'ARButton';
+            arButton.textContent = arSupported ? 'Запустити AR' : 'AR недоступний';
+            arButton.disabled = !arSupported;
+            
+            if (arSupported) {
+                arButton.onclick = startARSession;
+            }
+            
+            document.body.appendChild(arButton);
+
+            // Налаштування відстеження сесії
+            renderer.xr.addEventListener('sessionstart', onARSessionStart);
+            renderer.xr.addEventListener('sessionend', onARSessionEnd);
+        }
+
+        async function startARSession() {
+            const arButton = document.getElementById('ARButton');
+            
+            try {
+                arButton.textContent = 'Запуск AR...';
+                arButton.disabled = true;
+
+                const session = await navigator.xr.requestSession('immersive-ar', {
+                    requiredFeatures: ['local'],
+                    optionalFeatures: ['hit-test', 'dom-overlay']
+                });
+
+                await renderer.xr.setSession(session);
+                
+            } catch (error) {
+                console.error('Помилка запуску AR сесії:', error);
+                arButton.textContent = 'Помилка AR';
+                arButton.disabled = false;
+                
+                const errorDiv = document.getElementById('error');
+                const errorMessage = document.getElementById('error-message');
+                errorMessage.textContent = `Помилка AR: ${error.message}`;
+                errorDiv.style.display = 'block';
+                
+                setTimeout(() => {
+                    errorDiv.style.display = 'none';
+                    arButton.textContent = 'Запустити AR';
+                }, 3000);
+            }
+        }
+
+        function onARSessionStart() {
+            console.log('AR сесію розпочато');
+            const arStatus = document.getElementById('ar-status');
+            const arButton = document.getElementById('ARButton');
+            
+            arStatus.style.display = 'block';
+            arButton.textContent = 'Вийти з AR';
+            arButton.disabled = false;
+            arButton.onclick = endARSession;
+            
+            // Позиціонуємо модель перед користувачем в AR
+            saturnGroup.position.set(0, 0, -2);
+            saturnGroup.scale.setScalar(currentScale);
+        }
+
+        function onARSessionEnd() {
+            console.log('AR сесію завершено');
+            const arStatus = document.getElementById('ar-status');
+            const arButton = document.getElementById('ARButton');
+            
+            arStatus.style.display = 'none';
+            arButton.textContent = 'Запустити AR';
+            arButton.onclick = startARSession;
+            
+            // Повертаємо модель в центр
+            saturnGroup.position.set(0, 0, 0);
+            saturnGroup.scale.setScalar(1);
+        }
+
+        function endARSession() {
+            const session = renderer.xr.getSession();
+            if (session) {
+                session.end();
+            }
+        }
+
+        function animate() {
+            renderer.setAnimationLoop(() => {
+                if (isRotating && saturn) {
+                    saturn.rotation.y += 0.01;
+                    
+                    if (rings) {
+                        rings.rotation.z += 0.005;
+                    }
+                }
+                
+                // Автоматичне обертання камери тільки поза AR режимом
+                if (!renderer.xr.isPresenting) {
+                    const time = Date.now() * 0.001;
+                    const radius = 8;
+                    camera.position.x = Math.cos(time * 0.1) * radius;
+                    camera.position.z = Math.sin(time * 0.1) * radius;
+                    camera.lookAt(0, 0, 0);
+                }
+                
+                renderer.render(scene, camera);
+            });
+        }
+
+        // Функції управління
+        window.toggleRotation = function() {
+            isRotating = !isRotating;
+            console.log('Обертання:', isRotating ? 'увімкнено' : 'вимкнено');
+        };
+
+        window.toggleRings = function() {
+            if (rings) {
+                ringsVisible = !ringsVisible;
+                rings.visible = ringsVisible;
+                console.log('Кільця:', ringsVisible ? 'видимі' : 'приховані');
+            }
+        };
+
+        window.adjustScale = function() {
+            scaleIndex = (scaleIndex + 1) % scales.length;
+            currentScale = scales[scaleIndex];
+            if (saturnGroup) {
+                saturnGroup.scale.setScalar(currentScale);
+                console.log('Масштаб:', currentScale);
+            }
+        };
+
+        // Обробка зміни розміру вікна
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // Запуск програми
+        init().catch(error => {
+            console.error('Помилка ініціалізації:', error);
+            document.getElementById('loading').style.display = 'none';
+            const errorDiv = document.getElementById('error');
+            const errorMessage = document.getElementById('error-message');
+            errorMessage.textContent = `Помилка ініціалізації: ${error.message}`;
+            errorDiv.style.display = 'block';
+        });
+    </script>
+</body>
+</html>
